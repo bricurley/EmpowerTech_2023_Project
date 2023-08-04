@@ -16,110 +16,11 @@ from pygame.locals import *
 
 
 
-# Manages messages sent from the phone server
-def onMessage(client, userdata, msg):
-    # Grabs access to a global various connected to the robot
-    global gdroid
-    message = (msg.payload.decode())
-    print(message)
-
-    # Splits rotation commands based on axis (x, y, and z)
-    tokens = message.split(',\"')
-    print(f'{tokens[2]} to {tokens[2][0:1]} {float(tokens[2][4:9])}')
-    for i in range(2,5):
-        currToken = tokens[i][0:1] 
-        currVal = (float(tokens[i][4:9]))
-        print(tokens[i])
-
-        # Changes robot movement based on x and y rotation (buggy, TO BE FIXED)
-        print(f'CurrToken is {currToken} and currVal is {currVal}')
-        if(currToken == 'x'):
-            print(f"setting Speed to {gdroid.get_speed() + 10*currVal}" )
-            gdroid.set_speed(gdroid.get_speed() + int(10*currVal))
-        elif(currToken == 'y'):
-            print(f'Setting heading to {gdroid.get_heading() + int(10*currVal)}')
-            gdroid.set_heading(gdroid.get_heading() + int(10*currVal))
-
-# Manages messages from the speech client and translates to commands for the robot
-def onSpeechMessage(client, userdata, msg):
-    global gdroid
-    message = (msg.payload.decode())
-    print(f"Executing function {message}")
-    if "turning" in message:
-        if "North" in message:
-            gdroid.set_heading(0)
-        if "East" in message:
-            gdroid.set_heading(90)
-        if "South" in message:
-            gdroid.set_heading(180)
-        if "West" in message:
-            gdroid.set_heading(270)
-    elif "setting speed to a higher value" in message:
-        gdroid.set_speed(gdroid.get_speed() + 20)
-    elif "setting speed to a lower value" in message:
-        gdroid.set_speed(math.floor(0, gdroid.get_speed() - 20))
-    elif "stopping!" in message:
-        gdroid.set_speed(0)
-
-
-# Runs on pressing the circle button and has the robot draw a circle
-def spinCircle(droid, speed, radius):
-    radius *= 1.5
-    tempHeading = droid.get_heading()
-    circumference = 2 * math.pi * radius
-    time = circumference / float(speed)
-    speed = circumference / float(time)
-    droid.set_speed(int(speed))
-    droid.spin(360, int(time))
-    droid.set_speed(0)
-    droid.set_heading(tempHeading)
-
-# Runs on pressing the square button and draws a square by rotating 90 degrees and going a fixed distance repeatedly
-def square(droid, dimesion, speed, screen, background):
-    tempHeading = droid.get_heading()
-    droid.set_heading(droid.get_heading())
-    go_dist_in_centimeters(droid, dimesion, speed, screen, background)
-    time.sleep(0.5)
-    droid.set_heading(droid.get_heading() + 90)
-    go_dist_in_centimeters(droid, dimesion, speed, screen, background)
-    time.sleep(0.5)
-    droid.set_heading(droid.get_heading() + 90)
-    go_dist_in_centimeters(droid, dimesion, speed, screen, background)
-    time.sleep(0.5)
-    droid.set_heading(droid.get_heading() + 90)
-    go_dist_in_centimeters(droid, dimesion, speed, screen, background)
-    droid.set_speed(0)
-    droid.set_heading(tempHeading)
-
-# Runs on pressing the triangle button and draws a right triangle
-def triangle(droid, dimesion, speed, screen, background):
-    tempHeading = droid.get_heading()
-    droid.set_heading(droid.get_heading())
-    go_dist_in_centimeters(droid, dimesion, speed, screen, background)
-    droid.set_heading(droid.get_heading() + 90)
-    go_dist_in_centimeters(droid, dimesion, speed, screen, background)
-    droid.set_heading(droid.get_heading() + 135)
-    go_dist_in_centimeters(droid, math.sqrt(dimesion**2+dimesion**2), speed, screen, background)
-    droid.set_speed(0)
-    droid.set_heading(tempHeading)
-
-# Function used by the triangle and square function, makes the robot go a specified distance
-def go_dist_in_centimeters(droid, dist, speed, screen, background):
-    startDist = droid.get_distance()
-    while(((droid.get_distance() - startDist < dist) and not traveled)):
-        droid.set_speed(speed)
-        updateFrame(screen, droid, background)
-        #print(droid.get_distance() - startDist)
-    droid.set_speed(0)
-    print("successfully went " + (str)(dist) + " centimeters")
 
 # Draws the dot for the robot as it travels on the screen
 def updateFrame(screen, droid, background):
-    # Makes a 4x4 square
-    droid_pos = Rect(screen.get_size()[0]/2 -2 + droid.get_location()['x'], screen.get_size()[1]/2 - 2 - droid.get_location()['y'], 4, 4)
-
     # Puts the square on the screen
-    pygame.draw.rect(background, (255, 0, 0), droid_pos)
+    pygame.draw.rect(background, (255, 0, 0), (100,100))
 
     # Updates the screen
     screen.blit(background, (0, 0))
@@ -271,6 +172,7 @@ def main():
 
     pygame.display.flip()
     while True:
+        updateFrame(screen, None, background)
         for event in pygame.event.get():
             # Runs code based on where a user had pressed on the screen
             if event.type == MOUSEBUTTONDOWN:
@@ -280,13 +182,11 @@ def main():
                 # Handles speed slider, changing value based on position of mouse
                 if(mousePos[0] > screen.get_size()[0]/2-BOARDSIZE/2-50 and mousePos[0] < screen.get_size()[0]/2-BOARDSIZE/2-20 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2 and mousePos[1] < screen.get_size()[1]/2+BOARDSIZE/2):
                     print("speed to be set to " + (str)((int(round((screen.get_size()[1]-mousePos[1]-screen.get_size()[1]/2+BOARDSIZE/2)/800*255)))))
-                    speed = update_speed(screen, background, speed_slider, speed_slider_bar, speedInput, (int(round((screen.get_size()[1]-mousePos[1]-screen.get_size()[1]/2+BOARDSIZE/2)/800*255))))
-                
+                    
                 # Handles shape size slider, changing values based on position of mouse
                 elif(mousePos[0] > screen.get_size()[0]/2-BOARDSIZE/2-100 and mousePos[0] < screen.get_size()[0]/2-BOARDSIZE/2-70 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2 and mousePos[1] < screen.get_size()[1]/2+BOARDSIZE/2):
                     print("Shape size to be set to " + (str)((int(round((screen.get_size()[1]-mousePos[1]-screen.get_size()[1]/2+BOARDSIZE/2)/800*80)))))
-                    shape_size = update_size(screen, background, shape_slider, shape_slider_bar, sizeInput, (int(round((1000-mousePos[1]-screen.get_size()[1]/2+BOARDSIZE/2)/800*80))))
-                
+                    
                 # Resets the board, covering it all in white
                 elif(mousePos[0] > screen.get_size()[0]/2-BOARDSIZE/2 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2 and mousePos[0] < screen.get_size()[0]/2+BOARDSIZE/2 and mousePos[1] < screen.get_size()[1]/2+BOARDSIZE/2):
                     #droid.set_speed(0)

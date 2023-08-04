@@ -1,26 +1,12 @@
 # Manages sleep functions for switching between threads
 import time
 
-# Allows for scanning nearby sphero robots for use in the script
-from spherov2 import scanner
 
-# Allows for commands to be sent to the Robot
-from spherov2.sphero_edu import SpheroEduAPI
-
-# Allows for changing colors to manage and perceive robot interaction TO BE IMPLEMENTED 
-from spherov2.types import Color
-
-# Allows for listening to commands and drawing to the screen to happen simultaneously
-import threading
-
-# Used for further control of the console
-import sys
 
 # Important for drawing circles
 import math
 
-# Used to prevent spam to the console
-import os
+
 
 # Used for click interactions with the user and for the main interface
 import pygame
@@ -28,21 +14,6 @@ import pygame
 # Used for various pygame screen and side elements
 from pygame.locals import *
 
-# Used as a separate input to get text input from the user
-import tkinter as tk
-
-# Used to manage and send commands to mosquitto
-import paho.mqtt.client as paho
-
-# Creates a global variable that continually tries to connnect to the robot and prints the status should it fail
-toy = None
-while(toy == None):
-    try:
-        toy = scanner.find_RVR()
-        time.sleep(1)
-        
-    except:
-        print("connect failed")
 
 
 # Manages messages sent from the phone server
@@ -221,45 +192,6 @@ def drawCenteredText(text, background, font, height, screen):
         
 # Main
 def main():
-    # Starts mqtt
-    phone_client = paho.Client()
-    phone_client.on_message = onMessage
-
-    if phone_client.connect("localhost", 1883, 15) != 0:
-        print("Could not connect")
-        sys.exit(-1)
-
-    # Subscribes to MQTT network that streams phone data
-    phone_client.subscribe("data")
-
-    # Starts retrieval from speech input
-    speech_client = paho.Client()
-    speech_client.on_Message = onSpeechMessage
-    if speech_client.connect("localhost", 1883, 15) != 0:
-        print("Could not connect")
-        sys.exit(-1)
-    
-    # Subscribes to MQTT network that streams speech data
-    speech_client.subscribe("speech_data")
-
-
-    # Creates a Tkinter window
-    window = tk.Tk()
-    greeting = tk.Label(text="Welcome to Sphero Controls!")
-    greeting.pack()
-    window.update()
-
-    #Displays to the user to wait pending all sensors starting up
-    label = tk.Label(text="Setting everything up!")
-    label.pack()
-    window.update()
-    sizeInput = tk.Entry(bg="purple", fg = "yellow",  width=50)
-    sizeInput.insert(0, '0')
-    speedInput = tk.Entry(bg = "blue", fg = "yellow", width = 50)
-    speedInput.insert(0, '0')
-
-    # Prevents unessesaary errors from spamming the console, uncomment in final edition
-    sys.stderr = open(os.devnull, "w")
 
     # Initialise screen and displays game name
     pygame.init()
@@ -276,38 +208,6 @@ def main():
     BOARDSIZE = 800
     board = Rect(screen.get_size()[0]/2-BOARDSIZE/2, screen.get_size()[1]/2-BOARDSIZE/2, BOARDSIZE, BOARDSIZE)
     pygame.draw.rect(background, (200, 200, 200), board, 0, 3)
-
-    #Prepare Images for Sliders, Buttons, etc.
-
-    #note picture size is 32x32
-   #screen 1200x1000
-    try:
-       #Buttons
-       upArrow_but = pygame.image.load("Assets/upArrow.png").convert()
-       downArrow_but = pygame.image.load("Assets/DownArrow.png").convert()
-       leftArrow_but = pygame.image.load("Assets/LeftArrow.png").convert()
-       rightArrow_but = pygame.image.load("Assets/RightArrow.png").convert()
-       stop_but = pygame.image.load("Assets/StopSign.png").convert()
-
-       #Functions
-       circle_but = pygame.image.load("Assets/Circle.png").convert()
-       square_but = pygame.image.load("Assets/Square.png").convert()
-       triangle_but = pygame.image.load("Assets/Triangle.png").convert()
-       phone_but = pygame.image.load("Assets/Phone.png").convert()
-
-       #Waiting of artwork for Vocal Commands
-       speak_but = pygame.image.load("Assets/Phone.png").convert()
-
-       #Sliders
-       #TODO Design implementation
-
-
-       #prints assets to UI
-       screen.blit(upArrow_but, (screen.get_size()[0]/2+BOARDSIZE/2+70,screen.get_size()[1]/2-BOARDSIZE/2+30))
-
-    except:
-        print("Assets unable to load, Check to Ensure File path is correct and images are in the Asset Folder")
-        print("Drawing Default Art")
  
     # Prepare Slider for speed
     speed_slider = Rect(screen.get_size()[0]/2-BOARDSIZE/2-50, screen.get_size()[1]/2-BOARDSIZE/2, 30, BOARDSIZE)
@@ -326,9 +226,6 @@ def main():
     # Prepare Bar to show on shape Slider
     shape_slider_bar = Rect(screen.get_size()[0]/2-BOARDSIZE/2-100,screen.get_size()[1]/2+BOARDSIZE/2-14,30, 14)
     pygame.draw.rect(background, (100, 0, 100), shape_slider_bar)
-
-    # Prepare numbers on top (80) and bottom (0) of bar to represent values
-
 
     # Prepare North button for click-control
     north_button = Rect(screen.get_size()[0]/2+BOARDSIZE/2+70,screen.get_size()[1]/2-BOARDSIZE/2+30,30, 30)
@@ -361,7 +258,6 @@ def main():
     #Prepare circle button 
     circle_button = Rect(Rect(screen.get_size()[0]/2+BOARDSIZE/2+70,screen.get_size()[1]/2-BOARDSIZE/2+550,30, 30))
     pygame.draw.rect(background, (255, 145, 30), circle_button)
-
     #Prepare square button
     square_button = Rect(Rect(screen.get_size()[0]/2+BOARDSIZE/2+70,screen.get_size()[1]/2-BOARDSIZE/2+650,30, 30))
     pygame.draw.rect(background, (145, 30, 255), square_button)
@@ -373,165 +269,82 @@ def main():
     # Prepare opening text
     font = pygame.font.Font(None, 36)
 
-    # Display everything for the screen
-    speed_button = tk.Button(text= "Set Speed", width=20, height=1, bg = "blue", fg = "yellow", command = lambda: update_speed(screen, background, speed_slider, speed_slider_bar, speedInput, -1))
-    size_button = tk.Button(text="Set Size", width=20, height=1, bg="purple", fg="yellow", command = lambda: update_size(screen, background, shape_slider, shape_slider_bar, sizeInput, -1))
-    screen.blit(background, (0, 0))
     pygame.display.flip()
+    while True:
+        for event in pygame.event.get():
+            # Runs code based on where a user had pressed on the screen
+            if event.type == MOUSEBUTTONDOWN:
+                mousePos = pygame.mouse.get_pos()
+                print(mousePos)
 
-    # Prepares starting config and related variables
-    opening = True
-    with SpheroEduAPI(toy) as droid:
-        global gdroid
-        gdroid = droid
-        global traveled
-        global currX
-        global currY
-        traveled = False
-        currX = 0
-        currY = 0
-        global speed 
-        speed= 0
-        oldTime = 0
-        global shape_size 
-        shape_size= 0
-        global phone_button_going
-        phone_button_going = False
-        global speech_button_going
-        speech_button_going = False
-        while(droid.get_location() == None):
-            print("initializing, please wait")
-            time.sleep(0.1)
-        
-        while(True):
-            if((oldTime != round(time.time() * 10))):
-                #print(droid.get_location())
-                oldTime = round(time.time() * 2)
-                board = Rect(screen.get_size()[0]/2-BOARDSIZE/2, screen.get_size()[1]/2-BOARDSIZE/2, BOARDSIZE, BOARDSIZE)
-                if (droid.get_location()['x'] > 400 or droid.get_location()['x'] < -400) or (droid.get_location()['y'] > 400 or droid.get_location()['y'] < -400):
-                    droid.set_heading(droid.get_heading() + 180)
-                    drawCenteredText("Out of Bounds", background, font, screen.get_size()[1]/2, screen)
-                    time.sleep(1.5)
+                # Handles speed slider, changing value based on position of mouse
+                if(mousePos[0] > screen.get_size()[0]/2-BOARDSIZE/2-50 and mousePos[0] < screen.get_size()[0]/2-BOARDSIZE/2-20 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2 and mousePos[1] < screen.get_size()[1]/2+BOARDSIZE/2):
+                    print("speed to be set to " + (str)((int(round((screen.get_size()[1]-mousePos[1]-screen.get_size()[1]/2+BOARDSIZE/2)/800*255)))))
+                    speed = update_speed(screen, background, speed_slider, speed_slider_bar, speedInput, (int(round((screen.get_size()[1]-mousePos[1]-screen.get_size()[1]/2+BOARDSIZE/2)/800*255))))
+                
+                # Handles shape size slider, changing values based on position of mouse
+                elif(mousePos[0] > screen.get_size()[0]/2-BOARDSIZE/2-100 and mousePos[0] < screen.get_size()[0]/2-BOARDSIZE/2-70 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2 and mousePos[1] < screen.get_size()[1]/2+BOARDSIZE/2):
+                    print("Shape size to be set to " + (str)((int(round((screen.get_size()[1]-mousePos[1]-screen.get_size()[1]/2+BOARDSIZE/2)/800*80)))))
+                    shape_size = update_size(screen, background, shape_slider, shape_slider_bar, sizeInput, (int(round((1000-mousePos[1]-screen.get_size()[1]/2+BOARDSIZE/2)/800*80))))
+                
+                # Resets the board, covering it all in white
+                elif(mousePos[0] > screen.get_size()[0]/2-BOARDSIZE/2 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2 and mousePos[0] < screen.get_size()[0]/2+BOARDSIZE/2 and mousePos[1] < screen.get_size()[1]/2+BOARDSIZE/2):
+                    #droid.set_speed(0)
+                    time.sleep(0.1)
                     pygame.draw.rect(background, (200, 200, 200), board, 0, 3)
-                    screen.blit(background, (0, 0))
+                    #screen.blit(background, (0, 0))
                     pygame.display.flip()
 
-                updateFrame(screen, droid, background)
-            
-            # Updates TKinter to tell the user that everything is set up
-            label['text'] = "You're good to go!"
-            label.pack()
-            sizeInput.pack()
-            speedInput.pack()
-            size_button.pack(side=tk.LEFT)
-            speed_button.pack(side=tk.LEFT)
-            window.update()
-
-            # Runs TKinter in a thread to run pygame and control software at the same time
-            tkinter_thread = threading.Thread(target = window.mainloop)
-            tkinter_thread.setDaemon(True)
-            tkinter_thread.start()
-
-
-            for event in pygame.event.get():
-                # Ends execution upon the user closing the window
-                if event.type == QUIT:
-                    toy.wake()
-                    try:
-                        phone_client.disconnect()
-                    except:
-                        pass
-                    try:
-                        speech_client.disconnect()
-                    except:
-                        pass
-                    return 1
+                # Handles North button and sets the robot to North (+y)
+                elif(mousePos[0] > screen.get_size()[0]/2+BOARDSIZE/2+70 and mousePos[0] < screen.get_size()[0]/2+BOARDSIZE/2+100 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2+30 and mousePos[1] < screen.get_size()[1]/2-BOARDSIZE/2+60):
+                    print("North")
+                    #droid.set_heading(0)
+                    #droid.set_speed(speed)
                 
-                # Runs code based on where a user had pressed on the screen
-                elif event.type == MOUSEBUTTONDOWN:
-                    mousePos = pygame.mouse.get_pos()
-                    print(mousePos)
+                # Handles East button and sets the robot to East (+x)
+                elif(mousePos[0] > screen.get_size()[0]/2+BOARDSIZE/2+120 and mousePos[0] < screen.get_size()[0]/2+BOARDSIZE/2+150 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2+80 and mousePos[1] < screen.get_size()[1]/2-BOARDSIZE/2+110):
+                    print("East")
+                    #droid.set_heading(90)
+                    #droid.set_speed(speed)
 
-                    # Handles speed slider, changing value based on position of mouse
-                    if(mousePos[0] > screen.get_size()[0]/2-BOARDSIZE/2-50 and mousePos[0] < screen.get_size()[0]/2-BOARDSIZE/2-20 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2 and mousePos[1] < screen.get_size()[1]/2+BOARDSIZE/2):
-                        print("speed to be set to " + (str)((int(round((screen.get_size()[1]-mousePos[1]-screen.get_size()[1]/2+BOARDSIZE/2)/800*255)))))
-                        speed = update_speed(screen, background, speed_slider, speed_slider_bar, speedInput, (int(round((screen.get_size()[1]-mousePos[1]-screen.get_size()[1]/2+BOARDSIZE/2)/800*255))))
-                    
-                    # Handles shape size slider, changing values based on position of mouse
-                    elif(mousePos[0] > screen.get_size()[0]/2-BOARDSIZE/2-100 and mousePos[0] < screen.get_size()[0]/2-BOARDSIZE/2-70 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2 and mousePos[1] < screen.get_size()[1]/2+BOARDSIZE/2):
-                        print("Shape size to be set to " + (str)((int(round((screen.get_size()[1]-mousePos[1]-screen.get_size()[1]/2+BOARDSIZE/2)/800*80)))))
-                        shape_size = update_size(screen, background, shape_slider, shape_slider_bar, sizeInput, (int(round((1000-mousePos[1]-screen.get_size()[1]/2+BOARDSIZE/2)/800*80))))
-                    
-                    # Resets the board, covering it all in white
-                    elif(mousePos[0] > screen.get_size()[0]/2-BOARDSIZE/2 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2 and mousePos[0] < screen.get_size()[0]/2+BOARDSIZE/2 and mousePos[1] < screen.get_size()[1]/2+BOARDSIZE/2):
-                        droid.set_speed(0)
-                        time.sleep(0.1)
-                        pygame.draw.rect(background, (200, 200, 200), board, 0, 3)
-                        screen.blit(background, (0, 0))
-                        pygame.display.flip()
+                # Handles West button and sets the robot to West (-x)
+                elif(mousePos[0] > screen.get_size()[0]/2+BOARDSIZE/2+20 and mousePos[0] < screen.get_size()[0]/2+BOARDSIZE/2+50 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2+80 and mousePos[1] < screen.get_size()[1]/2-BOARDSIZE/2+110):
+                    print("West")
+                    #droid.set_heading(270)
+                    #droid.set_speed(speed)
 
-                    # Handles North button and sets the robot to North (+y)
-                    elif(mousePos[0] > screen.get_size()[0]/2+BOARDSIZE/2+70 and mousePos[0] < screen.get_size()[0]/2+BOARDSIZE/2+100 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2+30 and mousePos[1] < screen.get_size()[1]/2-BOARDSIZE/2+60):
-                        droid.set_heading(0)
-                        droid.set_speed(speed)
-                    
-                    # Handles East button and sets the robot to East (+x)
-                    elif(mousePos[0] > screen.get_size()[0]/2+BOARDSIZE/2+120 and mousePos[0] < screen.get_size()[0]/2+BOARDSIZE/2+150 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2+80 and mousePos[1] < screen.get_size()[1]/2-BOARDSIZE/2+110):
-                        droid.set_heading(90)
-                        droid.set_speed(speed)
+                # Handles South button and sets the robot to South (-y)
+                elif(mousePos[0] > screen.get_size()[0]/2+BOARDSIZE/2+70 and mousePos[0] < screen.get_size()[0]/2+BOARDSIZE/2+100 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2+130 and mousePos[1] < screen.get_size()[1]/2-BOARDSIZE/2+160):
+                    print("South")
+                    #droid.set_heading(180)
+                    #droid.set_speed(speed)
 
-                    # Handles West button and sets the robot to West (-x)
-                    elif(mousePos[0] > screen.get_size()[0]/2+BOARDSIZE/2+20 and mousePos[0] < screen.get_size()[0]/2+BOARDSIZE/2+50 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2+80 and mousePos[1] < screen.get_size()[1]/2-BOARDSIZE/2+110):
-                        droid.set_heading(270)
-                        droid.set_speed(speed)
+                # Handles stop button and sets the robots speed to zero despite any additional settings
+                elif(mousePos[0] > screen.get_size()[0]/2+BOARDSIZE/2+70 and mousePos[0] < screen.get_size()[0]/2+BOARDSIZE/2+100 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2+80 and mousePos[1] < screen.get_size()[1]/2-BOARDSIZE/2+110):
+                    print("Stop")
+                    #droid.set_speed(0)
 
-                    # Handles South button and sets the robot to South (-y)
-                    elif(mousePos[0] > screen.get_size()[0]/2+BOARDSIZE/2+70 and mousePos[0] < screen.get_size()[0]/2+BOARDSIZE/2+100 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2+130 and mousePos[1] < screen.get_size()[1]/2-BOARDSIZE/2+160):
-                        droid.set_heading(180)
-                        droid.set_speed(speed)
+                # Handles speech button and begins speech control mode
+                elif(mousePos[0] > screen.get_size()[0]/2+BOARDSIZE/2+70 and mousePos[0] < screen.get_size()[0]/2+BOARDSIZE/2+100 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2+350 and mousePos[1] < screen.get_size()[1]/2-BOARDSIZE/2+380):
+                    print("Speech Button")
 
-                    # Handles stop button and sets the robots speed to zero despite any additional settings
-                    elif(mousePos[0] > screen.get_size()[0]/2+BOARDSIZE/2+70 and mousePos[0] < screen.get_size()[0]/2+BOARDSIZE/2+100 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2+80 and mousePos[1] < screen.get_size()[1]/2-BOARDSIZE/2+110):
-                        droid.set_speed(0)
+                
 
-                    # Handles speech button and begins speech control mode
-                    elif(mousePos[0] > screen.get_size()[0]/2+BOARDSIZE/2+70 and mousePos[0] < screen.get_size()[0]/2+BOARDSIZE/2+100 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2+350 and mousePos[1] < screen.get_size()[1]/2-BOARDSIZE/2+380):
-                        print("Speech Button")
+                # Handles circle button
+                # Creates a thread to send robot controls and map to screen at the same time 
+                # Utilized speed and size slider values
+                elif(mousePos[0] > screen.get_size()[0]/2+BOARDSIZE/2+70 and mousePos[0] < screen.get_size()[0]/2+BOARDSIZE/2+100 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2+550 and mousePos[1] < screen.get_size()[1]/2-BOARDSIZE/2+580):
+                    print("circle")
+                
+                # Handles square button and sets robot to draw square 
+                # Uses speed and size values
+                elif(mousePos[0] > screen.get_size()[0]/2+BOARDSIZE/2+70 and mousePos[0] < screen.get_size()[0]/2+BOARDSIZE/2+100 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2+650 and mousePos[1] < screen.get_size()[1]/2-BOARDSIZE/2+680):
+                    print("square")
 
-
-                    # Handles phone button and begins phone control mode
-                    elif(mousePos[0] > screen.get_size()[0]/2+BOARDSIZE/2+70 and mousePos[0] < screen.get_size()[0]/2+BOARDSIZE/2+100 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2+450 and mousePos[1] < screen.get_size()[1]/2-BOARDSIZE/2+480):
-                        print("Phone Button")
-                        if(phone_button_going == True):
-                            phone_button_going = False
-                            phone_client.loop_stop()
-                        else:
-                            try:
-                                phone_client.loop_start()
-                                print("loop started")
-                                phone_button_going = True
-                            except: 
-                                print("phone failed, try again")
-
-                    
-
-                    # Handles circle button
-                    # Creates a thread to send robot controls and map to screen at the same time 
-                    # Utilized speed and size slider values
-                    elif(mousePos[0] > screen.get_size()[0]/2+BOARDSIZE/2+70 and mousePos[0] < screen.get_size()[0]/2+BOARDSIZE/2+100 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2+550 and mousePos[1] < screen.get_size()[1]/2-BOARDSIZE/2+580):
-                        circle_thread = threading.Thread(target=spinCircle, args=(droid, speed, shape_size))
-                        circle_thread.setDaemon(True)
-                        circle_thread.start()
-                    
-                    # Handles square button and sets robot to draw square 
-                    # Uses speed and size values
-                    elif(mousePos[0] > screen.get_size()[0]/2+BOARDSIZE/2+70 and mousePos[0] < screen.get_size()[0]/2+BOARDSIZE/2+100 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2+650 and mousePos[1] < screen.get_size()[1]/2-BOARDSIZE/2+680):
-                        square(droid, shape_size, speed, screen, background)
-
-                    # Handles triangles button and sets robot to draw square 
-                    # Uses speed and size values
-                    elif(mousePos[0] > screen.get_size()[0]/2+BOARDSIZE/2+70 and mousePos[0] < screen.get_size()[0]/2+BOARDSIZE/2+100 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2+750 and mousePos[1] < screen.get_size()[1]/2-BOARDSIZE/2+780):
-                        triangle(droid, shape_size, speed, screen, background)
+                # Handles triangles button and sets robot to draw square 
+                # Uses speed and size values
+                elif(mousePos[0] > screen.get_size()[0]/2+BOARDSIZE/2+70 and mousePos[0] < screen.get_size()[0]/2+BOARDSIZE/2+100 and mousePos[1] > screen.get_size()[1]/2-BOARDSIZE/2+750 and mousePos[1] < screen.get_size()[1]/2-BOARDSIZE/2+780):
+                    print("Triangle")
 
 # runs main
 while(main() != 1):

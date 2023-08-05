@@ -84,7 +84,6 @@ MIXED_OPTIONS = {'Therapy': {
 
 ALL_OPTIONS = GOOD_OPTIONS | BAD_OPTIONS | MIXED_OPTIONS
 
-
 def _from_rgb(rgb):
     """translates an rgb tuple of int to a tkinter friendly color code
     """
@@ -96,21 +95,31 @@ def _from_rgb(rgb):
 def update_stats(stats, button_clicked, stat_labels, buttons, event_label):
     stat_change_val = ALL_OPTIONS[button_clicked['text']]
     event_text = ALL_OPTIONS[button_clicked['text']]['Description']
+    global num_choices_made
     event_label['text'] = event_text
     # go through value in current_stats dict and update accordingly
     for key in stat_change_val.keys():
-        if key == 'Description':
-            pass
-        else:
-            if stats[key] + stat_change_val[key] < 100 and stat_change_val[key] + stats[key] > 0:
+        if key != 'Description':
+            if stats[key] + stat_change_val[key] <= 100 and stat_change_val[key] + stats[key] >= 0:
                 stats[key] += stat_change_val[key]
                 stat_labels[key]['text'] = f"{key}: {stats[key]}%"
                 stat_labels[key]['foreground'] = _from_rgb(((int)(255-255/100*stats[key]), (int)(255/100*stats[key]), 0))
     set_options(buttons)
+    if num_choices_made < 30:
+        num_choices_made += 1
+    else:
+        finish_game(buttons, event_label)
+    
     
 def set_button(button, option_list):
     random_option = sample(option_list.items(), 1)
     button['text'] = random_option[0][0]
+
+def finish_game(buttons, event_label):
+    for button in buttons:
+        button['state'] = DISABLED
+    event_label['text'] = 'You completed the game, your stats are to the left.'
+    
 
 # 
 def set_options(option_buttons):
@@ -123,7 +132,7 @@ def set_options(option_buttons):
 def initialize_window():
     master = Tk()
     return master
-    
+
 def main():
     # creates a Tk() object
     window = Tk()
@@ -144,7 +153,7 @@ def main():
     window.configure(bg=_from_rgb((0, 0, 128)))
     
     
-    label = Label(window, text ="This is a mental health simulation focused on understanding the impact of actions")
+    label = Label(window, text ="This is a mental health simulation focused on understanding the impact of actions on you")
     label.pack(side = TOP, pady = 10)
 
     top_y_position = 150
@@ -186,7 +195,7 @@ def main():
     
 
     # Event prompting the user to select a button
-    event_text='lemon'
+    event_text='You are just travelling through life, taking the days as they come'
     event_label = Label(window,
                         text=event_text,
                         width=70, border=2,
@@ -196,6 +205,9 @@ def main():
     event_label.place(x=300, 
                       y=300, #DELETE LATER used tobe 370
                       height = 150)
+
+    global num_choices_made
+    num_choices_made = 0
 
     # Initialize buttons/options user can select in simulation
     option_1 = Button(window, 
@@ -212,7 +224,8 @@ def main():
                                                   option_2,
                                                   stat_labels,
                                                   option_buttons,
-                                                  event_label))
+                                                  event_label
+                                                ))
     
     option_3 = Button(window, 
                       text="Option 3",

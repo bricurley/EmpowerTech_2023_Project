@@ -4,8 +4,73 @@
 from tkinter import *
 from tkinter.ttk import *
 from random import sample, shuffle
-from options import GOOD_OPTIONS, BAD_OPTIONS, MIXED_OPTIONS, ALL_OPTIONS
 
+GOOD_OPTIONS = {'Walk Outside': {
+        'Mental Health': 2,
+        'Physical Health': 5,
+        'Social Standing': 5
+    },
+    'Solid Sleep': {
+        'Mental Health': 5,
+        'Physical Health': 5
+    }, 
+    'Make Friends': {
+        'Social Standing': 10,
+        'Mental Health': 5
+    }
+    }
+
+BAD_OPTIONS = {'Alcohol': {
+        'Mental Health': -5,
+        'Drug Dependency': 5,
+        'Money': -50
+    },
+    'Burn Bridges': {
+        'Mental Health': 5,
+        'Social Standing': -10
+    },
+    'The Bar': {
+        "Mental Health": -5,
+        "Drug Dependency": 5,
+        "Physical Health": -5,
+        "Social Standing": 5,
+        "Money": -35
+    },
+    'Skip Exercise for 1 Week': {
+        'Mental Health': -5,
+        'Physical Health': -10
+    }
+}
+
+MIXED_OPTIONS = {'Therapy': {
+        'Money': -100,
+        'Mental Health': 10,
+        'Social Standing': -5,
+        "Drug Dependency": -5
+    },
+    'Medication': {
+        'Money': -35,
+        'Mental Health': 10,
+        'Drug Dependency': 5,
+        'Social Standing': -5
+    },
+    'Social Media': {
+        'Mental Health': -5,
+        'Social Standing': 5,
+    },
+    'Work Extra Hours': {
+        'Social Standing': 5,
+        'Money': 100,
+        'Mental Health': -5
+    },
+    'Mental Health Day': {
+        'Mental Health': 5,
+        'Social Standing': -5,
+        'Money': -100
+    }
+}
+
+ALL_OPTIONS = GOOD_OPTIONS | BAD_OPTIONS | MIXED_OPTIONS
 
 # Update stats values based on user's decision
 def update_stats(stats, stat_change_val, stat_labels):
@@ -14,21 +79,15 @@ def update_stats(stats, stat_change_val, stat_labels):
         stats[key] += stat_change_val[key]
         stat_labels[key]['text'] = f"{key}: {stats[key]}"
     
-def set_button(button, option):
-    
+def set_button(button, option_list):
+    random_option = sample(option_list.items(), 1)
+    button['text'] = random_option[0][0]
 
 def set_options(option_buttons):
     shuffle(option_buttons)
-    good_option = sample(GOOD_OPTIONS)
-    set_button(option_buttons[0], good_option)
-
-    bad_option = sample(BAD_OPTIONS)
-    set_button(option_buttons[1], bad_option)
-
-    random_option = sample(ALL_OPTIONS)
-    set_options(option_buttons[2], random_option)
-        
-    pass
+    set_button(option_buttons[0], GOOD_OPTIONS)
+    set_button(option_buttons[1], BAD_OPTIONS)
+    set_button(option_buttons[2], ALL_OPTIONS)
 
 # Prepares Labels and buttons displayed on first code execution
 def initialize_window():
@@ -111,19 +170,25 @@ def main():
     option_1 = Button(window, 
                       text="Option 1", 
                       command=lambda:update_stats(current_stats, 
-                                                  {'Money':-500}, 
+                                                  option_1, 
                                                   stat_labels))
     
     option_2 = Button(window, 
                       text="Option 2", 
                       command=lambda:update_stats(current_stats, 
-                                                  {"Liver Health": 100, "Money": 1000},
+                                                  option_2,
                                                   stat_labels))
     
     option_3 = Button(window, 
-                      text="Option 3", 
+                      text="Option 3",
+                      command=lambda:update_stats(current_stats,
+                                                  option_3,
+                                                  stat_labels)
                       )
     
+
+    option_buttons = [option_1, option_2, option_3]
+    set_options(option_buttons)
     # Place option buttons 
     option_1.place(x=340,
                    y=400)

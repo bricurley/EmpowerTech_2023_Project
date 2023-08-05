@@ -8,37 +8,44 @@ from random import sample, shuffle
 GOOD_OPTIONS = {'Walk Outside': {
         'Mental Health': 2,
         'Physical Health': 5,
-        'Social Standing': 5
+        'Social Standing': 5,
+        'Description': 'You go on a walk to ease your stress, get some exercise, and make new friends'
     },
     'Solid Sleep': {
         'Mental Health': 5,
-        'Physical Health': 5
+        'Physical Health': 5,
+        'Description': 'You get a good night\'s rest to recharge both your mental and physical health'
     }, 
     'Make Friends': {
         'Social Standing': 10,
-        'Mental Health': 5
+        'Mental Health': 5,
+        'Description': 'You are able to find people to open up to and connect with'
     }
     }
 
 BAD_OPTIONS = {'Alcohol': {
         'Mental Health': -5,
         'Drug Dependency': 5,
-        'Money': -50
+        'Money': -50,
+        'Description': 'You turn to alcohol as a way to cope. But it is expensive and only a temporary solution'
     },
     'Burn Bridges': {
         'Mental Health': 5,
-        'Social Standing': -10
+        'Social Standing': -10,
+        'Description': 'You refuse to accept help and support from close friends'
     },
     'The Bar': {
-        "Mental Health": -5,
-        "Drug Dependency": 5,
-        "Physical Health": -5,
-        "Social Standing": 5,
-        "Money": -35
-    },
-    'Skip Exercise for 1 Week': {
         'Mental Health': -5,
-        'Physical Health': -10
+        'Drug Dependency': 5,
+        'Physical Health': -5,
+        'Social Standing': 5,
+        'Money': -35,
+        'Description': 'You go to the bar to loosen up and feel cool, but spend money and the alcohol affects your health'
+    },
+    'No Exercise': {
+        'Mental Health': -5,
+        'Physical Health': -10,
+        'Description': 'You skip exercising, leaving you feeling drained and out of energy'
     }
 }
 
@@ -46,43 +53,66 @@ MIXED_OPTIONS = {'Therapy': {
         'Money': -100,
         'Mental Health': 10,
         'Social Standing': -5,
-        "Drug Dependency": -5
+        'Drug Dependency': -5,
+        'Description': 'You open up through therapy and find help other than drugs. Unfortunately, there are costs and social stigma as well'
     },
     'Medication': {
         'Money': -35,
         'Mental Health': 10,
         'Drug Dependency': 5,
-        'Social Standing': -5
+        'Social Standing': -5,
+        'Description': 'Medication helps, but can be expensive, increase drug dependency, and have social stigma associated with it'
     },
     'Social Media': {
         'Mental Health': -5,
         'Social Standing': 5,
+        'Description': 'You doomscroll tiktok, leaving you drained but found a friend doing the same'
     },
     'Work Extra Hours': {
         'Social Standing': 5,
         'Money': 100,
-        'Mental Health': -5
+        'Mental Health': -5,
+        'Description': 'You skip family time to work, leaving you feeling drained and alone with more money'
     },
     'Mental Health Day': {
         'Mental Health': 5,
         'Social Standing': -5,
-        'Money': -100
+        'Money': -100,
+        'Description': 'You skip work to recharge, you couldn\'t work and people look down on you but you feel great'
     }
 }
 
 ALL_OPTIONS = GOOD_OPTIONS | BAD_OPTIONS | MIXED_OPTIONS
 
+
+def _from_rgb(rgb):
+    """translates an rgb tuple of int to a tkinter friendly color code
+    """
+    r, g, b = rgb
+    return f'#{r:02x}{g:02x}{b:02x}'
+
+
 # Update stats values based on user's decision
-def update_stats(stats, stat_change_val, stat_labels):
+def update_stats(stats, button_clicked, stat_labels, buttons, event_label):
+    stat_change_val = ALL_OPTIONS[button_clicked['text']]
+    event_text = ALL_OPTIONS[button_clicked['text']]['Description']
+    event_label['text'] = event_text
     # go through value in current_stats dict and update accordingly
     for key in stat_change_val.keys():
-        stats[key] += stat_change_val[key]
-        stat_labels[key]['text'] = f"{key}: {stats[key]}"
+        if key == 'Description':
+            pass
+        else:
+            if stats[key] + stat_change_val[key] < 100 and stat_change_val[key] + stats[key] > 0:
+                stats[key] += stat_change_val[key]
+                stat_labels[key]['text'] = f"{key}: {stats[key]}%"
+                stat_labels[key]['foreground'] = _from_rgb(((int)(255-255/100*stats[key]), (int)(255/100*stats[key]), 0))
+    set_options(buttons)
     
 def set_button(button, option_list):
     random_option = sample(option_list.items(), 1)
     button['text'] = random_option[0][0]
 
+# 
 def set_options(option_buttons):
     shuffle(option_buttons)
     set_button(option_buttons[0], GOOD_OPTIONS)
@@ -111,9 +141,10 @@ def main():
     # sets the geometry of
     # main root window
     window.geometry("1024x600")
+    window.configure(bg=_from_rgb((0, 0, 128)))
     
     
-    label = Label(window, text ="This is the main window")
+    label = Label(window, text ="This is a mental health simulation focused on understanding the impact of actions")
     label.pack(side = TOP, pady = 10)
 
     top_y_position = 150
@@ -141,7 +172,7 @@ def main():
     for key in current_stats.keys():
         value_recorder = Label(
             window, 
-            text=f"{key}: {current_stats[key]}", 
+            text=f"{key}: {current_stats[key]}%", 
             border=2, 
             borderwidth=2, 
             relief='solid', 
@@ -155,9 +186,9 @@ def main():
     
 
     # Event prompting the user to select a button
-    event="This is the event that happened to the user"
+    event_text='lemon'
     event_label = Label(window,
-                        text=event,
+                        text=event_text,
                         width=70, border=2,
                         borderwidth=2, relief='solid',
                         foreground='black',
@@ -171,40 +202,37 @@ def main():
                       text="Option 1", 
                       command=lambda:update_stats(current_stats, 
                                                   option_1, 
-                                                  stat_labels))
+                                                  stat_labels,
+                                                  option_buttons,
+                                                  event_label))
     
     option_2 = Button(window, 
                       text="Option 2", 
                       command=lambda:update_stats(current_stats, 
                                                   option_2,
-                                                  stat_labels))
+                                                  stat_labels,
+                                                  option_buttons,
+                                                  event_label))
     
     option_3 = Button(window, 
                       text="Option 3",
                       command=lambda:update_stats(current_stats,
                                                   option_3,
-                                                  stat_labels)
+                                                  stat_labels,
+                                                  option_buttons,
+                                                  event_label)
                       )
     
 
     option_buttons = [option_1, option_2, option_3]
     set_options(option_buttons)
     # Place option buttons 
-    option_1.place(x=340,
+    option_1.place(x=330,
                    y=400)
-    option_2.place(x=570, y=400)
-    option_3.place(x=800, y=400)
-    #FIXME add button border
-    #button_border = Label(window, width=70, border=2, borderwidth=2, relief='solid', foreground='transparent')
-    #button_border.place(x=300, y=400)
-    
-    # Following line will bind click event
-    # On any click left / right button
-    # of mouse a new window will be opened
-    
-    
-    
-    # mainloop, runs infinitely
+    option_2.place(x=500, y=400)
+    option_3.place(x=670, y=400)
+
+    # mainloop, runs until the user presses 'X'
     mainloop()
 
 if __name__ == "__main__":

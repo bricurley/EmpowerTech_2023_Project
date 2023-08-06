@@ -49,10 +49,10 @@ BAD_OPTIONS = {'Alcohol': {
         'Physical Health': -10,
         'Description': 'You are stressed for an exam and study too much, and perform poorly due to lack of sleep'
     },
-    'Lose temper from Stress': {
+    'Lose Temper': {
         'Mental Health': -10,
         'Social Standing': -15,
-        'Description': 'You are feeling very overwhelmed and lash out at your friends'
+        'Description': 'You are feeling very overwhelmed and stressed and lash out at your friends'
     }
 }
 

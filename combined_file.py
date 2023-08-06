@@ -9,134 +9,9 @@ from tkinter import Label, Button, DISABLED, Tk, CENTER, mainloop, ACTIVE
 from random import sample, shuffle, choice
 
 # Imports options from the defined options.py file
-#from options import GOOD_OPTIONS, BAD_OPTIONS, ALL_OPTIONS, BIG_EVENTS
+from options import GOOD_OPTIONS, BAD_OPTIONS, ALL_OPTIONS, BIG_EVENTS
 
-GOOD_OPTIONS = {'Walk Outside': {
-        'Mental Health': 2,
-        'Physical Health': 5,
-        'Social Standing': 5,
-        'Description': 'You go on a walk to ease your stress, get some exercise, and make new friends'
-    },
-    'Solid Sleep': {
-        'Mental Health': 5,
-        'Physical Health': 5,
-        'Description': 'You get a good night\'s rest to recharge both your mental and physical health'
-    }, 
-    'Make Friends': {
-        'Social Standing': 10,
-        'Mental Health': 5,
-        'Description': 'You are able to find people to open up to and connect with'
-    },
-    'Journal Entry': {
-        'Mental Health': 5,
-        'Description': 'You write in your journal to destress from the comfort of your bedroom desk'
-    }
-}
 
-BAD_OPTIONS = {'Alcohol': {
-        'Mental Health': -5,
-        'Drug Independency': -5,
-        'Money': -50,
-        'Description': 'You turn to alcohol as a way to cope. But it is expensive and only a temporary solution'
-    },
-    'Burn Bridges': {
-        'Mental Health': -5,
-        'Social Standing': -10,
-        'Description': 'You refuse to accept help and support from close friends'
-    },
-    'The Bar': {
-        'Mental Health': -5,
-        'Drug Independency': -5,
-        'Physical Health': -5,
-        'Social Standing': 5,
-        'Money': -35,
-        'Description': 'You go to the bar to loosen up and feel cool, but spend money and the alcohol affects your health'
-    },
-    'No Exercise': {
-        'Mental Health': -5,
-        'Physical Health': -10,
-        'Description': 'You skip exercising, leaving you feeling drained and out of energy'
-    },
-    'All Nighter Studying': {
-        'Mental Health': -10,
-        'Physical Health': -10,
-        'Description': 'You are stressed for an exam and study too much, and perform poorly due to lack of sleep'
-    }
-}
-
-MIXED_OPTIONS = {'Therapy': {
-        'Money': -100,
-        'Mental Health': 10,
-        'Social Standing': -5,
-        'Drug Independency': 5,
-        'Description': 'You open up through therapy and find help other than drugs.\nUnfortunately, there are costs and social stigma as well'
-    },
-    'Medication': {
-        'Money': -35,
-        'Mental Health': 10,
-        'Drug Independency': -5,
-        'Social Standing': -5,
-        'Description': 'Medication helps, but can be expensive, increase drug dependency, and have social stigma\nassociated with it'
-    },
-    'Social Media': {
-        'Mental Health': -5,
-        'Social Standing': 5,
-        'Description': 'You doomscroll tiktok, leaving you drained but found a friend doing the same'
-    },
-    'Work Extra Hours': {
-        'Social Standing': 5,
-        'Money': 100,
-        'Mental Health': -5,
-        'Description': 'You skip family time to work, leaving you feeling drained and alone with more money'
-    },
-    'Mental Health Day': {
-        'Mental Health': 5,
-        'Social Standing': -5,
-        'Money': -100,
-        'Description': 'You skip work to recharge, you couldn\'t work and people look down on you but you feel great'
-    },
-    'Self Care Day': {
-        'Mental Health': 10,
-        'Money': -35,
-        'Description': 'You take a day off you get your favorite ice cream but you spend money.'
-    },
-    'Healthy Boundaries': {
-        'Social Standing': -10,
-        'Mental Health': 10,
-        'Description': 'You need to take care of yourself but people are upset you aren\'t there for them as much'
-    },
-    'No Boundaries': {
-        'Social Standing': 10,
-        'Mental Health': -10,
-        'Description': 'You become a people pleaser, which makes you more popular but lets people take advantage of you'
-    }
-}
-
-BIG_EVENTS = [['You fall very ill',
-               {'Work Anyway': {
-                   'Description': 'You needed the money but could not take care of yourself at the same time\nYou also make your coworkers sick and mad at you',
-                   'Mental Health': -20,
-                   'Money': 150,
-                   'Mental Health':-20,
-                   'Social Standing': -10,
-                   'Physical Health': -20
-               }}, 
-               {'Work at Home': {
-                   'Description': 'You still need the money from your paycheck, but decide to take it easy for now\nYour coworkers are grateful you also aren\'t risking their health',
-                   'Mental Health': 5,
-                   'Money': 100,
-                   'Social Standing': 10,
-                   'Physical Health': 5
-               }}, 
-               {'Rest Day': {
-                   'Description': 'You don\'t get paid, but know your health and the safety of your coworkers come first',
-                   'Mental Health': 20,
-                   'Physical Health': 20,
-                   'Social Standing': 10,
-                   'Money': -50
-               }}]]
-
-ALL_OPTIONS = GOOD_OPTIONS | BAD_OPTIONS | MIXED_OPTIONS
 
 '''CONSTANTS'''
 # Max values of stats. Everything but money is represented as a percentage (starting at 100). Money starts at $1000
@@ -373,6 +248,7 @@ def initialize_window():
     window.geometry("880x480")
     window.title("Mental Health Simulation")
     window.configure(bg=_from_rgb((0, 0, 128)))
+    window.resizable(0, 0)
         
     # Displays message to user about the most recent choice they made. Start off empty
     event_text=''
@@ -381,6 +257,7 @@ def initialize_window():
                        width=70, border=2,
                        relief='solid',
                        foreground='black',
+                       bg=_from_rgb((150, 150, 150)),
                        anchor='center')
     
     prev_event.place(x=300,
@@ -393,6 +270,7 @@ def initialize_window():
                         width=70, border=2,
                         borderwidth=2, relief='solid',
                         foreground='black',
+                        bg=_from_rgb((150, 150, 150)),
                         anchor='n')
     event_label.place(x=300, 
                       y=300,
@@ -416,6 +294,7 @@ def initialize_window():
 def init_stats(window, current_stats, stat_labels):
     # Display information about the simulation at the top of the screen
     heading = Label(window, 
+                    border=2,
                     text ="This is a mental health simulation focused on understanding the impact of actions\nCreated by Briana Curley and Ahmad Qureshi", 
                     width=102)
     heading.place(x=28,
@@ -426,7 +305,8 @@ def init_stats(window, current_stats, stat_labels):
     stats_border = Label(window, 
                          border=2, 
                          borderwidth=2, 
-                         width=100, 
+                         width=100,
+                         bg=_from_rgb((120, 120, 120)), 
                          relief='solid')
     
     stats_border.place(x=10,

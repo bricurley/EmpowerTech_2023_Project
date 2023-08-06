@@ -28,10 +28,21 @@ def _from_rgb(rgb):
     r, g, b = rgb
     return f'#{r:02x}{g:02x}{b:02x}'
 
+def _truncate_color(color):
+    if color > 255:
+        return 255
+    if color < 0:
+        return 0
+    return color
+
 '''GAME LOGIC'''
 def update_stat_label(stats, stat_labels, key):
     stat_labels[key]['text'] = make_stat_label_text(key, stats)
-    stat_labels[key]['foreground'] = _from_rgb(((int)(255-255/MAX_VALS[key]*stats[key]), (int)(255/MAX_VALS[key]*stats[key]), 0))
+    red = max(((int)(255-255/MAX_VALS[key]*stats[key])), 0)
+    green = min(100, (int)(255/MAX_VALS[key]*stats[key]))
+    red = _truncate_color(red)
+    green = _truncate_color(green)
+    stat_labels[key]['foreground'] = _from_rgb((red, green, 0))
 
 # 
 def get_event_stats(button_clicked, prev_event):
@@ -225,11 +236,11 @@ def add_buttons(window, current_stats, stat_labels, prev_event, event_label):
     option_buttons = [option_1, option_2, option_3]
     set_options(option_buttons)
     # Place option buttons 
-    option_1.place(x=330,
+    option_1.place(x=350,
                    y=400)
-    option_2.place(x=500, 
+    option_2.place(x=520, 
                    y=400)
-    option_3.place(x=670, 
+    option_3.place(x=690, 
                    y=400)
     option_buttons = [option_1, option_2, option_3]
 
@@ -353,6 +364,7 @@ def init_stats(window, current_stats, stat_labels):
         top_y_position+=50
         # Adds the label to a dictionary for later reference
         stat_labels[key] = value_recorder
+        current_stats['Mental Health'] = 10
 
 # Run game
 def main():

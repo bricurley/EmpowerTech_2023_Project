@@ -1,8 +1,7 @@
 # This will import all the widgets
 # and modules which are available in
 # tkinter and ttk module
-from tkinter import *
-from tkinter.ttk import *
+from tkinter import Label, Button, DISABLED, Tk, CENTER, mainloop, ACTIVE
 from random import sample, shuffle
 
 GOOD_OPTIONS = {'Walk Outside': {
@@ -21,14 +20,9 @@ GOOD_OPTIONS = {'Walk Outside': {
         'Mental Health': 5,
         'Description': 'You are able to find people to open up to and connect with'
     },
-    'Healthy Boundaries': {
-        'Social Standing': 10,
-        'Mental Health': 10,
-        'Description': 'Your friends know you are there for them but also that you need to take care of yourself'
-    },
     'Journal Entry': {
         'Mental Health': 10,
-        'Description': 'You write in your journal to destress'
+        'Description': 'You write in your journal to destress from the comfort of your bedroom desk'
     }
     }
 
@@ -68,14 +62,14 @@ MIXED_OPTIONS = {'Therapy': {
         'Mental Health': 10,
         'Social Standing': -5,
         'Drug Independency': 5,
-        'Description': 'You open up through therapy and find help other than drugs. Unfortunately, there are costs and social stigma as well'
+        'Description': 'You open up through therapy and find help other than drugs.\nUnfortunately, there are costs and social stigma as well'
     },
     'Medication': {
         'Money': -35,
         'Mental Health': 10,
         'Drug Independency': -5,
         'Social Standing': -5,
-        'Description': 'Medication helps, but can be expensive, increase drug dependency, and have social stigma associated with it'
+        'Description': 'Medication helps, but can be expensive, increase drug dependency, and have social stigma\nassociated with it'
     },
     'Social Media': {
         'Mental Health': -5,
@@ -99,7 +93,12 @@ MIXED_OPTIONS = {'Therapy': {
         'Money': -35,
         'Description': 'You take a day off you get your favorite ice cream but you spend money.'
     },
-    'Stop Setting Boundaries': {
+    'Healthy Boundaries': {
+        'Social Standing': -10,
+        'Mental Health': 10,
+        'Description': 'You need to take care of yourself but people are upset you aren\'t there for them as much'
+    },
+    'No Boundaries': {
         'Social Standing': 10,
         'Mental Health': -10,
         'Description': 'You become a people pleaser, which makes you more popular but lets people take advantage of you'
@@ -114,6 +113,7 @@ MAX_VALS = {"Mental Health": 100,
             "Social Standing": 100,
             "Money": 1000}
 
+# Function to control colors from rgb function
 def _from_rgb(rgb):
     """translates an rgb tuple of int to a tkinter friendly color code
     """
@@ -137,11 +137,22 @@ def update_stats(stats, button_clicked, stat_labels, buttons, event_label, prev_
                 else:
                     stat_labels[key]['text'] = f"{key}: {stats[key]}%"
                 stat_labels[key]['foreground'] = _from_rgb(((int)(255-255/MAX_VALS[key]*stats[key]), (int)(255/MAX_VALS[key]*stats[key]), 0))
+            if stats[key] + stat_change_val[key] < 0:
+                stats[key] += stat_change_val[key]
+                if key == 'Money':
+                    
+                    stat_labels[key]['text'] = f"{key}: ${stats[key]}"
+                else:
+                    stat_labels[key]['text'] = f"{key}: {stats[key]}%"
+                stat_labels[key]['foreground'] = _from_rgb((255, 0, 0))
+                lose_label = lose_from_stat(key, window)
+                finish_game(buttons, event_label, prev_event, window, stats, stat_labels, lose_label)
     set_options(buttons)
+    # Check if user has reached 30 turns/decisions
     if num_choices_made < 30:
         num_choices_made += 1
     else:
-        finish_game(buttons, event_label, prev_event, window, stats, stat_labels)
+        finish_game(buttons, event_label, prev_event, window, stats, stat_labels, None)
     
 def reset_stats(stats, stat_labels):
     for key in MAX_VALS.keys():
@@ -157,25 +168,33 @@ def set_button(button, option_list):
     random_option = sample(option_list.items(), 1)
     button['text'] = random_option[0][0]
 
-def finish_game(buttons, event_label, prev_event, window, stats, stat_labels):
+def lose_from_stat(stat, window):
+    lose_label = Label(master=window, text=f"Your {stat}\n      fell too low", foreground=_from_rgb((255,0,0)), anchor=CENTER)
+    lose_label.place(x=47, y=380)
+    return lose_label
+
+def finish_game(buttons, event_label, prev_event, window, stats, stat_labels, lose_label):
     for button in buttons:
         button['state'] = DISABLED
-    event_label['text'] = 'You completed the game, your stats are to the left.'
-    prev_event['text'] = ''
+    prev_event['text'] = '\n\nYou completed the game, your final stats are to the left.'
     reset_button_reference = []
     reset_button = Button(window, text='Reset Simulation')
     reset_button_reference.append(reset_button)
-    reset_button['command'] = lambda: reset_game(reset_button_reference, buttons, stats, stat_labels)
+    reset_button['command'] = lambda: reset_game(reset_button_reference, buttons, stats, stat_labels, prev_event, event_label, lose_label)
     reset_button.place(x=510, y=210)
 
-def reset_game(reset_button_reference, buttons, stats, stat_labels):
+def reset_game(reset_button_reference, buttons, stats, stat_labels, event_label, prev_event, lose_label):
     reset_button = reset_button_reference.pop()
     reset_button.destroy()
+    if lose_label != None:
+        lose_label.destroy()
     for button in buttons:
         button['state'] = ACTIVE
     global num_choices_made
     num_choices_made = -1
     reset_stats(stats, stat_labels)
+    event_label['text'] = '\n\nWhat would you like to do next?'
+    prev_event['text'] = ''
     
 
 # 
@@ -195,7 +214,7 @@ def main():
     window = Tk()
     
     # Initialize stat values for beginning of simulation
-    current_stats = MAX_VALS
+    current_stats = MAX_VALS.copy()
     
     stat_labels = {}
     
@@ -239,7 +258,7 @@ def main():
                 border=2, 
                 borderwidth=2, 
                 relief='solid', 
-                foreground='green', 
+                foreground=_from_rgb((0, 255, 0)), 
                 anchor='center', 
                 width=20)
         else:
@@ -249,7 +268,7 @@ def main():
                 border=2, 
                 borderwidth=2, 
                 relief='solid', 
-                foreground='green', 
+                foreground=_from_rgb((0, 255, 0)), 
                 anchor='center', 
                 width=20)
         value_recorder.place(x=27, 
@@ -314,8 +333,6 @@ def main():
                                                   event_label, 
                                                   window)
                       )
-    
-
     option_buttons = [option_1, option_2, option_3]
     set_options(option_buttons)
     # Place option buttons 

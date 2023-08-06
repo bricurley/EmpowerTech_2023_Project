@@ -6,10 +6,10 @@ from tkinter import Label, Button, DISABLED, Tk, CENTER, mainloop, ACTIVE
 
 # Imports randomization functions for shuffling an array and 
 # getting a random thing from a dictionatry
-from random import sample, shuffle
+from random import sample, shuffle, choice
 
 # Imports options from the defined options.py file
-#from options import GOOD_OPTIONS, BAD_OPTIONS, ALL_OPTIONS
+#from options import GOOD_OPTIONS, BAD_OPTIONS, ALL_OPTIONS, BIG_EVENTS
 
 GOOD_OPTIONS = {'Walk Outside': {
         'Mental Health': 2,
@@ -112,6 +112,30 @@ MIXED_OPTIONS = {'Therapy': {
     }
 }
 
+BIG_EVENTS = [['You fall very ill',
+               {'Work Anyway': {
+                   'Description': 'You needed the money but could not take care of yourself at the same time\nYou also make your coworkers sick and mad at you',
+                   'Mental Health': -20,
+                   'Money': 150,
+                   'Mental Health':-20,
+                   'Social Standing': -10,
+                   'Physical Health': -20
+               }}, 
+               {'Work at Home': {
+                   'Description': 'You still need the money from your paycheck, but decide to take it easy for now\nYour coworkers are grateful you also aren\'t risking their health',
+                   'Mental Health': 5,
+                   'Money': 100,
+                   'Social Standing': 10,
+                   'Physical Health': 5
+               }}, 
+               {'Rest Day': {
+                   'Description': 'You don\'t get paid, but know your health and the safety of your coworkers come first',
+                   'Mental Health': 20,
+                   'Physical Health': 20,
+                   'Social Standing': 10,
+                   'Money': -50
+               }}]]
+
 ALL_OPTIONS = GOOD_OPTIONS | BAD_OPTIONS | MIXED_OPTIONS
 
 '''CONSTANTS'''
@@ -134,10 +158,31 @@ def update_stat_label(stats, stat_labels, key):
     stat_labels[key]['text'] = make_stat_label_text(key, stats)
     stat_labels[key]['foreground'] = _from_rgb(((int)(255-255/MAX_VALS[key]*stats[key]), (int)(255/MAX_VALS[key]*stats[key]), 0))
 
+# 
+def get_event_stats(button_clicked, prev_event):
+    # Gets the option that matches the text in the button
+    try:
+        event_stats = ALL_OPTIONS[button_clicked['text']]
+
+    # try blocks fails when event not in ALL_OPTIONS, then checks in BIG_EVENTS
+    except:
+        # Iterates through the Big events and checks for a match with the text
+        for big_event in BIG_EVENTS:
+            if(big_event[0] == prev_event['text']):
+                # Iterates through the options and finds the one that matches the button text
+                for i in range(1,4):
+                    keysList = [key for key in big_event[i]]
+                    if keysList[0] == button_clicked['text']:
+                        # Sets the stats and the function then proceeds as normal
+                        event_stats = big_event[i][keysList[0]]
+    return event_stats
+    
+
 # Update stats values based on user's decision
 def update_stats(stats, button_clicked, stat_labels, buttons, event_label, prev_event, window):
     # Grabs the values that change by referencing the text from the button and the options dictionary
-    event_stats = ALL_OPTIONS[button_clicked['text']]
+    event_stats = get_event_stats(button_clicked, prev_event)           
+    
 
     # Updates the event label text with the event description
     event_text = event_stats['Description']
@@ -149,6 +194,9 @@ def update_stats(stats, button_clicked, stat_labels, buttons, event_label, prev_
         if key != 'Description':
             if stats[key] + event_stats[key] <= MAX_VALS[key] and event_stats[key] + stats[key] >= 0:
                 stats[key]+=event_stats[key]
+                update_stat_label(stats, stat_labels, key)
+            if stats[key] + event_stats[key] >= MAX_VALS[key]:
+                stats[key] = MAX_VALS[key]
                 update_stat_label(stats, stat_labels, key)
             if stats[key] + event_stats[key] < 0:
                 stats[key] += event_stats[key]
@@ -162,6 +210,24 @@ def update_stats(stats, button_clicked, stat_labels, buttons, event_label, prev_
     # End game if max number of turns has been reached
     else:
         finish_game(buttons, event_label, prev_event, window, stats, stat_labels, None)
+    if num_choices_made%10 == 5:
+        big_event_logic(buttons, prev_event)
+
+def big_event_logic(buttons, prev_event):
+    #Select option from big events dict
+    event = choice(BIG_EVENTS)
+    shuffle(buttons)
+    prev_event['text'] = event[0]
+    # Populate buttons with options for big event
+    for i in range (1,4):
+        keysList = [key for key in event[i]]
+        buttons[i-1]['text'] = keysList[0]
+    
+
+def set_button_fixed(button, option):
+    random_option = sample(option, 1)
+    button['text'] = random_option[0][0]
+
 
 '''END OF GAME FUNCTIONS'''
 
@@ -231,7 +297,7 @@ def reset_game(reset_button_reference, buttons, stats, stat_labels, event_label,
 
 '''GAME INITIALIZATION'''
 # Updates text in option buttons
-def set_button(button, option_list):
+def set_button_random(button, option_list):
     random_option = sample(option_list.items(), 1)
     button['text'] = random_option[0][0]
 
@@ -240,11 +306,11 @@ def set_options(option_buttons):
     # Randomizes the order of the list of buttons
     shuffle(option_buttons)
     # Sets one of the three buttons to a good option
-    set_button(option_buttons[0], GOOD_OPTIONS)
+    set_button_random(option_buttons[0], GOOD_OPTIONS)
     # Sets one button to a bad option
-    set_button(option_buttons[1], BAD_OPTIONS)
+    set_button_random(option_buttons[1], BAD_OPTIONS)
     # Sets one option to a completely random option
-    set_button(option_buttons[2], ALL_OPTIONS)
+    set_button_random(option_buttons[2], ALL_OPTIONS)
 
 def add_buttons(window, current_stats, stat_labels, prev_event, event_label):
     # Prepares a list to refer to all buttons when necessary

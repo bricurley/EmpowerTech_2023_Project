@@ -9,8 +9,112 @@ from tkinter import Label, Button, DISABLED, Tk, CENTER, mainloop, ACTIVE
 from random import sample, shuffle
 
 # Imports options from the defined options.py file
-from options import GOOD_OPTIONS, BAD_OPTIONS, ALL_OPTIONS
+#from options import GOOD_OPTIONS, BAD_OPTIONS, ALL_OPTIONS
 
+GOOD_OPTIONS = {'Walk Outside': {
+        'Mental Health': 2,
+        'Physical Health': 5,
+        'Social Standing': 5,
+        'Description': 'You go on a walk to ease your stress, get some exercise, and make new friends'
+    },
+    'Solid Sleep': {
+        'Mental Health': 5,
+        'Physical Health': 5,
+        'Description': 'You get a good night\'s rest to recharge both your mental and physical health'
+    }, 
+    'Make Friends': {
+        'Social Standing': 10,
+        'Mental Health': 5,
+        'Description': 'You are able to find people to open up to and connect with'
+    },
+    'Journal Entry': {
+        'Mental Health': 5,
+        'Description': 'You write in your journal to destress from the comfort of your bedroom desk'
+    }
+}
+
+BAD_OPTIONS = {'Alcohol': {
+        'Mental Health': -5,
+        'Drug Independency': -5,
+        'Money': -50,
+        'Description': 'You turn to alcohol as a way to cope. But it is expensive and only a temporary solution'
+    },
+    'Burn Bridges': {
+        'Mental Health': -5,
+        'Social Standing': -10,
+        'Description': 'You refuse to accept help and support from close friends'
+    },
+    'The Bar': {
+        'Mental Health': -5,
+        'Drug Independency': -5,
+        'Physical Health': -5,
+        'Social Standing': 5,
+        'Money': -35,
+        'Description': 'You go to the bar to loosen up and feel cool, but spend money and the alcohol affects your health'
+    },
+    'No Exercise': {
+        'Mental Health': -5,
+        'Physical Health': -10,
+        'Description': 'You skip exercising, leaving you feeling drained and out of energy'
+    },
+    'All Nighter Studying': {
+        'Mental Health': -10,
+        'Physical Health': -10,
+        'Description': 'You are stressed for an exam and study too much, and perform poorly due to lack of sleep'
+    }
+}
+
+MIXED_OPTIONS = {'Therapy': {
+        'Money': -100,
+        'Mental Health': 10,
+        'Social Standing': -5,
+        'Drug Independency': 5,
+        'Description': 'You open up through therapy and find help other than drugs.\nUnfortunately, there are costs and social stigma as well'
+    },
+    'Medication': {
+        'Money': -35,
+        'Mental Health': 10,
+        'Drug Independency': -5,
+        'Social Standing': -5,
+        'Description': 'Medication helps, but can be expensive, increase drug dependency, and have social stigma\nassociated with it'
+    },
+    'Social Media': {
+        'Mental Health': -5,
+        'Social Standing': 5,
+        'Description': 'You doomscroll tiktok, leaving you drained but found a friend doing the same'
+    },
+    'Work Extra Hours': {
+        'Social Standing': 5,
+        'Money': 100,
+        'Mental Health': -5,
+        'Description': 'You skip family time to work, leaving you feeling drained and alone with more money'
+    },
+    'Mental Health Day': {
+        'Mental Health': 5,
+        'Social Standing': -5,
+        'Money': -100,
+        'Description': 'You skip work to recharge, you couldn\'t work and people look down on you but you feel great'
+    },
+    'Self Care Day': {
+        'Mental Health': 10,
+        'Money': -35,
+        'Description': 'You take a day off you get your favorite ice cream but you spend money.'
+    },
+    'Healthy Boundaries': {
+        'Social Standing': -10,
+        'Mental Health': 10,
+        'Description': 'You need to take care of yourself but people are upset you aren\'t there for them as much'
+    },
+    'No Boundaries': {
+        'Social Standing': 10,
+        'Mental Health': -10,
+        'Description': 'You become a people pleaser, which makes you more popular but lets people take advantage of you'
+    }
+}
+
+ALL_OPTIONS = GOOD_OPTIONS | BAD_OPTIONS | MIXED_OPTIONS
+
+'''CONSTANTS'''
 # Max values of stats. Everything but money is represented as a percentage (starting at 100). Money starts at $1000
 MAX_VALS = {"Mental Health": 100,
             "Drug Independency": 100,
@@ -18,14 +122,15 @@ MAX_VALS = {"Mental Health": 100,
             "Social Standing": 100,
             "Money": 1000}
 
+'''INTERNAL'''
 # Function to control colors from rgb function
 def _from_rgb(rgb):
     # translates an rgb tuple of int to a tkinter friendly color code
     r, g, b = rgb
     return f'#{r:02x}{g:02x}{b:02x}'
 
-def update_stat_labels(stats, stat_labels, key, stat_change_val):
-    
+'''GAME LOGIC'''
+def update_stat_label(stats, stat_labels, key):
     stat_labels[key]['text'] = make_stat_label_text(key, stats)
     stat_labels[key]['foreground'] = _from_rgb(((int)(255-255/MAX_VALS[key]*stats[key]), (int)(255/MAX_VALS[key]*stats[key]), 0))
 
@@ -36,20 +141,18 @@ def update_stats(stats, button_clicked, stat_labels, buttons, event_label, prev_
 
     # Updates the event label text with the event description
     event_text = event_stats['Description']
-    
-    event_label['text'] = event_text
+    prev_event['text'] = event_text
 
     global num_choices_made
-    # go through value in current_stats dict and update accordingly
+    # go through value in current_stats dict and add/subtract values from accordingly
     for key in event_stats.keys():
         if key != 'Description':
-            curr_stat = stats[key]
-            if curr_stat + event_stats[key] <= MAX_VALS[key] and event_stats[key] + stats[key] >= 0:
-                curr_stat+=event_stats[key]
-                update_stat_labels(stats, stat_labels, event_stats) #FIXME missing an argument
-            if curr_stat + event_stats[key] < 0:
-                curr_stat += event_stats[key]
-                update_stat_labels(stats, stat_labels, key)
+            if stats[key] + event_stats[key] <= MAX_VALS[key] and event_stats[key] + stats[key] >= 0:
+                stats[key]+=event_stats[key]
+                update_stat_label(stats, stat_labels, key)
+            if stats[key] + event_stats[key] < 0:
+                stats[key] += event_stats[key]
+                update_stat_label(stats, stat_labels, key)
                 lose_label = lose_from_stat(key, window)
                 finish_game(buttons, event_label, prev_event, window, stats, stat_labels, lose_label)
     set_options(buttons)
@@ -123,11 +226,10 @@ def reset_game(reset_button_reference, buttons, stats, stat_labels, event_label,
     num_choices_made = -1
     reset_stats(stats, stat_labels)
     # Display prompts for user to make a decision from option buttons
-    event_label['text'] = '\n\nWhat would you like to do next?'
-    prev_event['text'] = ''
+    prev_event['text'] = '\n\nWhat would you like to do next?'
+    event_label['text'] = ''
 
 '''GAME INITIALIZATION'''
-
 # Updates text in option buttons
 def set_button(button, option_list):
     random_option = sample(option_list.items(), 1)
@@ -155,8 +257,8 @@ def add_buttons(window, current_stats, stat_labels, prev_event, event_label):
                                                   option_1, 
                                                   stat_labels,
                                                   option_buttons,
-                                                  prev_event,
                                                   event_label,
+                                                  prev_event,
                                                   window))
     
     option_2 = Button(window, 
@@ -165,8 +267,8 @@ def add_buttons(window, current_stats, stat_labels, prev_event, event_label):
                                                   option_2,
                                                   stat_labels,
                                                   option_buttons,
-                                                  prev_event,
                                                   event_label,
+                                                  prev_event,
                                                   window))
     
     option_3 = Button(window, 
@@ -175,8 +277,8 @@ def add_buttons(window, current_stats, stat_labels, prev_event, event_label):
                                                   option_3,
                                                   stat_labels,
                                                   option_buttons,
-                                                  prev_event,
-                                                  event_label, 
+                                                  event_label,
+                                                  prev_event, 
                                                   window)
                       )
     option_buttons = [option_1, option_2, option_3]
@@ -202,10 +304,11 @@ def initialize_window():
     stat_labels = {}
     
     # Sets the size, title, and main color of the window
-    window.geometry("1024x600")
+    window.geometry("880x480")
     window.title("Mental Health Simulation")
     window.configure(bg=_from_rgb((0, 0, 128)))
         
+    # Displays message to user about the most recent choice they made. Start off empty
     event_text=''
     prev_event = Label(window,
                        text=event_text,
@@ -249,7 +352,7 @@ def init_stats(window, current_stats, stat_labels):
     heading = Label(window, 
                     text ="This is a mental health simulation focused on understanding the impact of actions\nCreated by Briana Curley and Ahmad Qureshi", 
                     width=102)
-    heading.place(x=10,
+    heading.place(x=28,
                   y=10)
     
     top_y_position = 150
@@ -276,6 +379,7 @@ def init_stats(window, current_stats, stat_labels):
     
     # Create labels for each stat value
     for key in current_stats.keys():
+        # Creates each button with standard sizes and text
         if key != 'Money':
             value_recorder = Label(
                 window, 
@@ -296,9 +400,12 @@ def init_stats(window, current_stats, stat_labels):
                 foreground=_from_rgb((0, 255, 0)), 
                 anchor='center', 
                 width=20)
+        # Adds each label to the screen
         value_recorder.place(x=27, 
                             y=top_y_position)
+        # Moves the next label to be 50 pixels lower
         top_y_position+=50
+        # Adds the label to a dictionary for later reference
         stat_labels[key] = value_recorder
 
 # Run game
